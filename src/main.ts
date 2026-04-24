@@ -55,15 +55,15 @@ console.log('[Корзина] После очистки:', basketModel.getItems(
 // Проверка покупателя
 buyerModel.setData({ address: 'Москва, ул. Пушкина, д. 1' });
 console.log('[Покупатель] Данные после ввода адреса:', buyerModel.getData());
-console.log('[Покупатель] Валидация шага 1:', buyerModel.validate(['payment', 'address']));
+console.log('[Покупатель] Валидация после ввода адреса:', buyerModel.validate());
 
 buyerModel.setData({ payment: 'card' });
 console.log(
-  '[Покупатель] Валидация шага 1 после выбора оплаты:',
-  buyerModel.validate(['payment', 'address'])
+  '[Покупатель] Валидация после выбора оплаты:',
+  buyerModel.validate()
 );
 
-console.log('[Покупатель] Валидация шага 2:', buyerModel.validate(['email', 'phone']));
+console.log('[Покупатель] Валидация до ввода контактов:', buyerModel.validate());
 
 buyerModel.setData({ email: 'test@test.ru', phone: '+79990000000' });
 console.log('[Покупатель] Полная валидация:', buyerModel.validate());

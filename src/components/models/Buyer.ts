@@ -1,9 +1,14 @@
-import { IBuyer } from '../../types';
+import { IBuyer, BuyerValidationErrors } from '../../types';
 
-export type BuyerValidationErrors = Partial<Record<keyof IBuyer, string>>;
+const initialBuyerData: IBuyer = {
+  payment: null,
+  email: '',
+  phone: '',
+  address: '',
+};
 
 export class Buyer {
-  private data: Partial<IBuyer> = {};
+  private data: IBuyer = { ...initialBuyerData };
 
   setData(data: Partial<IBuyer>): void {
     this.data = {
@@ -12,38 +17,31 @@ export class Buyer {
     };
   }
 
-  getData(): Partial<IBuyer> {
+  getData(): IBuyer {
     return { ...this.data };
   }
 
   clear(): void {
-    this.data = {};
+    this.data = { ...initialBuyerData };
   }
 
-  validate(
-    fields: (keyof IBuyer)[] = ['payment', 'address', 'email', 'phone']
-  ): BuyerValidationErrors {
+  validate(): BuyerValidationErrors {
     const errors: BuyerValidationErrors = {};
-    const messages: Record<keyof IBuyer, string> = {
-      payment: 'Не выбран способ оплаты',
-      address: 'Не указан адрес',
-      email: 'Не указан email',
-      phone: 'Не указан телефон',
-    };
 
-    for (const field of fields) {
-      const value = this.data[field];
+    if (!this.data.payment) {
+      errors.payment = 'Не выбран способ оплаты';
+    }
 
-      if (field === 'payment') {
-        if (!value) {
-          errors.payment = messages.payment;
-        }
-        continue;
-      }
+    if (!this.data.address.trim()) {
+      errors.address = 'Не указан адрес';
+    }
 
-      if (typeof value !== 'string' || !value.trim()) {
-        errors[field] = messages[field];
-      }
+    if (!this.data.email.trim()) {
+      errors.email = 'Не указан email';
+    }
+
+    if (!this.data.phone.trim()) {
+      errors.phone = 'Не указан телефон';
     }
 
     return errors;
