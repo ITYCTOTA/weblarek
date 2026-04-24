@@ -172,7 +172,7 @@ Presenter - презентер содержит основную логику п
 Методы:
 - `getItems(): IProduct[]` — получить товары корзины.
 - `addItem(item: IProduct): void` — добавить товар (без дублей).
-- `removeItem(item: IProduct): void` — удалить товар из корзины.
+- `removeItem(id: string): void` — удалить товар из корзины по id.
 - `clear(): void` — очистить корзину.
 - `getTotal(): number` — получить суммарную стоимость корзины.
 - `getCount(): number` — получить количество товаров.

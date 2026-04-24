@@ -45,7 +45,7 @@ console.log(
 );
 
 if (firstProduct) {
-  basketModel.removeItem(firstProduct);
+  basketModel.removeItem(firstProduct.id);
   console.log('[Корзина] После удаления первого товара:', basketModel.getItems());
 }
 

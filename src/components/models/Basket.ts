@@ -15,8 +15,8 @@ export class Basket {
     this.items.push(item);
   }
 
-  removeItem(item: IProduct): void {
-    this.items = this.items.filter((basketItem) => basketItem.id !== item.id);
+  removeItem(id: string): void {
+    this.items = this.items.filter((basketItem) => basketItem.id !== id);
   }
 
   clear(): void {
