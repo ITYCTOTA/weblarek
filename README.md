@@ -149,11 +149,12 @@ Presenter - презентер содержит основную логику п
 
 ### Класс Products
 Назначение: хранение каталога товаров и выбранного для предпросмотра товара.  
-Конструктор: без параметров.
+Конструктор: `constructor(events?: IEvents)` — принимает брокер событий для уведомления презентера об изменениях.
 
 Поля:
 - `items: IProduct[]` — каталог товаров.
 - `preview: IProduct | null` — товар, выбранный для подробного просмотра.
+- `events?: IEvents` — брокер событий.
 
 Методы:
 - `setItems(items: IProduct[]): void` — сохранить каталог товаров.
@@ -164,10 +165,11 @@ Presenter - презентер содержит основную логику п
 
 ### Класс Basket
 Назначение: хранение выбранных товаров и расчёт агрегированных данных корзины.  
-Конструктор: без параметров.
+Конструктор: `constructor(events?: IEvents)` — принимает брокер событий для уведомления презентера об изменениях.
 
 Поля:
 - `items: IProduct[]` — товары, добавленные в корзину.
+- `events?: IEvents` — брокер событий.
 
 Методы:
 - `getItems(): IProduct[]` — получить товары корзины.
@@ -180,10 +182,11 @@ Presenter - презентер содержит основную логику п
 
 ### Класс Buyer
 Назначение: хранение и валидация данных покупателя.
-Конструктор: без параметров
+Конструктор: `constructor(events?: IEvents)` — принимает брокер событий для уведомления презентера об изменениях.
 
 Поля:
 - `data: IBuyer` — текущие данные покупателя. В начальном состоянии содержит `payment: null`, а строковые поля — пустые строки.
+- `events?: IEvents` — брокер событий.
 
 Методы:
 - `setData(data: Partial<IBuyer>): void` — частично обновить данные покупателя.
@@ -204,10 +207,144 @@ Presenter - презентер содержит основную логику п
 - `getProducts(): Promise<IProductsResponse>` — GET-запрос на `/product/`, получение каталога.
 - `createOrder(data: IOrderRequest): Promise<IOrderResponse>` — POST-запрос на `/order/`, отправка заказа.
 
-## Проверка работы классов в `main.ts`
+## Слой представления
 
-В `main.ts` выполнено:
-- создание экземпляров `Products`, `Basket`, `Buyer`, `LarekApi`;
-- тестирование всех методов моделей данных через вызовы и вывод результатов в `console.log`;
-- запрос каталога через `LarekApi.getProducts()`;
-- сохранение массива `items` в модель `Products` и вывод результата в консоль.
+Классы представления находятся в `src/components/views`. Они отвечают только за отображение и генерацию событий пользовательских действий. Данные приложения хранятся в моделях.
+
+### Класс Page
+Назначение: отображение главной страницы, каталога и счётчика корзины.  
+Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+
+Поля:
+- `gallery: HTMLElement` — контейнер каталога.
+- `basketButton: HTMLButtonElement` — кнопка открытия корзины.
+- `basketCounter: HTMLElement` — счётчик товаров в корзине.
+- `events: IEvents` — брокер событий.
+
+Методы и сеттеры:
+- `set catalog(items: HTMLElement[]): void` — отрисовать карточки каталога.
+- `set basketCount(value: number): void` — обновить счётчик корзины.
+- `render(data?: Partial<IPageData>): HTMLElement` — обновить отображение.
+
+### Класс Modal
+Назначение: управление модальным окном.  
+Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+
+Поля:
+- `closeButton: HTMLButtonElement` — кнопка закрытия.
+- `contentElement: HTMLElement` — контейнер содержимого.
+- `events: IEvents` — брокер событий.
+
+Методы и сеттеры:
+- `set content(value: HTMLElement): void` — заменить содержимое модального окна.
+- `open(): void` — открыть модальное окно.
+- `close(): void` — закрыть модальное окно и очистить содержимое.
+- `render(data?: Partial<IModalData>): HTMLElement` — обновить отображение.
+
+### Класс Card
+Назначение: базовый класс карточек товара. Общая логика вынесена в родителя для карточек каталога, предпросмотра и корзины.  
+Конструктор: `constructor(container: HTMLElement)`.
+
+Поля:
+- `titleElement: HTMLElement` — название товара.
+- `priceElement: HTMLElement` — цена товара.
+- `categoryElement?: HTMLElement` — категория товара.
+- `imageElement?: HTMLImageElement` — изображение товара.
+
+Методы и сеттеры:
+- `set id(value: string): void` — сохранить id товара в DOM.
+- `set title(value: string): void` — отобразить название.
+- `set price(value: number | null): void` — отобразить цену.
+- `set category(value: string): void` — отобразить категорию и её модификатор.
+- `set image(value: string): void` — отобразить изображение.
+- `render(data?: Partial<IProductCardData>): HTMLElement` — обновить карточку.
+
+### Классы CatalogCard, PreviewCard, BasketCard
+Назначение: специализированные карточки для каталога, модального просмотра и корзины.
+
+Конструкторы:
+- `CatalogCard(container: HTMLElement, events: IEvents)` — карточка каталога.
+- `PreviewCard(container: HTMLElement, events: IEvents)` — карточка подробного просмотра.
+- `BasketCard(container: HTMLElement, events: IEvents)` — карточка товара в корзине.
+
+Особенности:
+- `CatalogCard` генерирует событие выбора карточки.
+- `PreviewCard` отображает описание, состояние кнопки покупки и генерирует событие добавления/удаления.
+- `BasketCard` отображает номер позиции и генерирует событие удаления товара из корзины.
+
+### Класс BasketView
+Назначение: отображение корзины.  
+Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+
+Поля:
+- `listElement: HTMLElement` — список товаров.
+- `priceElement: HTMLElement` — итоговая стоимость.
+- `submitButton: HTMLButtonElement` — кнопка оформления.
+
+Методы и сеттеры:
+- `set items(items: HTMLElement[]): void` — отрисовать товары корзины.
+- `set total(value: number): void` — обновить итоговую стоимость.
+- `set valid(value: boolean): void` — активировать или деактивировать кнопку оформления.
+- `render(data?: Partial<IBasketData>): HTMLElement` — обновить отображение.
+
+### Классы Form, OrderForm, ContactsForm
+Назначение: отображение форм оформления заказа. `Form` — общий родитель для форм, `OrderForm` отвечает за оплату и адрес, `ContactsForm` — за email и телефон.
+
+Конструкторы:
+- `Form(container: HTMLFormElement)` — базовая форма.
+- `OrderForm(container: HTMLFormElement, events: IEvents)` — первый шаг оформления.
+- `ContactsForm(container: HTMLFormElement, events: IEvents)` — второй шаг оформления.
+
+Методы и сеттеры:
+- `set valid(value: boolean): void` — управляет доступностью кнопки отправки.
+- `set errors(value: string[]): void` — отображает ошибки формы.
+- `set payment(value: TPayment | null): void` — выделяет выбранный способ оплаты.
+- `set address(value: string): void` — отображает адрес.
+- `set email(value: string): void` — отображает email.
+- `set phone(value: string): void` — отображает телефон.
+
+### Класс Success
+Назначение: отображение успешного оформления заказа.  
+Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+
+Методы и сеттеры:
+- `set total(value: number): void` — отображает списанную сумму.
+- `render(data?: Partial<ISuccessData>): HTMLElement` — обновить отображение.
+
+## События приложения
+
+События моделей:
+- `products:changed` — изменён каталог товаров.
+- `product:previewChanged` — изменён товар для подробного просмотра.
+- `basket:changed` — изменилось содержимое корзины.
+- `buyer:changed` — изменились данные покупателя.
+
+События представления:
+- `card:select` — пользователь выбрал карточку товара в каталоге.
+- `product:toggle` — пользователь нажал кнопку покупки или удаления в карточке предпросмотра.
+- `basket:open` — пользователь открыл корзину.
+- `basket:remove` — пользователь удалил товар из корзины.
+- `order:open` — пользователь начал оформление заказа.
+- `order:payment` — пользователь выбрал способ оплаты.
+- `order:address` — пользователь изменил адрес.
+- `order:next` — пользователь перешёл ко второму шагу оформления.
+- `contacts:email` — пользователь изменил email.
+- `contacts:phone` — пользователь изменил телефон.
+- `contacts:submit` — пользователь нажал кнопку оплаты.
+- `modal:close` — пользователь закрыл модальное окно.
+- `success:close` — пользователь закрыл окно успешного заказа.
+
+## Презентер
+
+Презентер реализован в `src/main.ts`, так как приложение одностраничное. Он создаёт экземпляры моделей, API-класса и компонентов представления, подписывается на события и связывает слои между собой.
+
+Основные обязанности презентера:
+- загрузить каталог товаров через `LarekApi.getProducts()` и сохранить его в `Products`;
+- при изменении каталога отрисовать карточки на главной странице;
+- открыть модальное окно товара при выборе карточки;
+- добавить товар в корзину или удалить его из корзины;
+- обновлять счётчик корзины и содержимое корзины при изменении модели;
+- открыть формы оформления заказа и управлять их валидацией;
+- собрать `IOrderRequest` из моделей `Buyer` и `Basket`;
+- отправить заказ через `LarekApi.createOrder()`;
+- после успешного заказа очистить корзину и данные покупателя, затем показать окно успеха.

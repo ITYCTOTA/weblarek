@@ -43,3 +43,54 @@ export interface IOrderResponse {
   id: string;
   total: number;
 }
+
+export interface IProductCardData extends IProduct {
+  buttonText?: string;
+  buttonDisabled?: boolean;
+  index?: number;
+}
+
+export interface IPageData {
+  catalog: HTMLElement[];
+  basketCount: number;
+}
+
+export interface IModalData {
+  content: HTMLElement;
+}
+
+export interface IBasketData {
+  items: HTMLElement[];
+  total: number;
+  valid: boolean;
+}
+
+export interface IOrderFormData {
+  payment: TPayment | null;
+  address: string;
+  valid: boolean;
+  errors: string[];
+}
+
+export interface IContactsFormData {
+  email: string;
+  phone: string;
+  valid: boolean;
+  errors: string[];
+}
+
+export interface ISuccessData {
+  total: number;
+}
+
+export interface IProductId {
+  id: string;
+}
+
+export interface IFieldChange {
+  value: string;
+}
+
+export interface IPaymentChange {
+  payment: TPayment;
+}

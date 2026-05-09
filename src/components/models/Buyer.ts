@@ -1,4 +1,5 @@
 import { IBuyer, BuyerValidationErrors } from '../../types';
+import { IEvents } from '../base/Events';
 
 const initialBuyerData: IBuyer = {
   payment: null,
@@ -10,11 +11,14 @@ const initialBuyerData: IBuyer = {
 export class Buyer {
   private data: IBuyer = { ...initialBuyerData };
 
+  constructor(private readonly events?: IEvents) {}
+
   setData(data: Partial<IBuyer>): void {
     this.data = {
       ...this.data,
       ...data,
     };
+    this.emitChange();
   }
 
   getData(): IBuyer {
@@ -23,6 +27,7 @@ export class Buyer {
 
   clear(): void {
     this.data = { ...initialBuyerData };
+    this.emitChange();
   }
 
   validate(): BuyerValidationErrors {
@@ -45,5 +50,9 @@ export class Buyer {
     }
 
     return errors;
+  }
+
+  private emitChange(): void {
+    this.events?.emit('buyer:changed', { buyer: this.getData() });
   }
 }
