@@ -44,14 +44,31 @@ export interface IOrderResponse {
   total: number;
 }
 
-export interface IProductCardData extends IProduct {
-  buttonText?: string;
-  buttonDisabled?: boolean;
-  index?: number;
+export interface ICardData {
+  title: string;
+  price: number | null;
 }
 
-export interface IPageData {
-  catalog: HTMLElement[];
+export interface IProductCardData extends ICardData {
+  category: string;
+  image: string;
+}
+
+export interface IPreviewCardData extends IProductCardData {
+  description: string;
+  buttonText: string;
+  buttonDisabled: boolean;
+}
+
+export interface IBasketCardData extends ICardData {
+  index: number;
+}
+
+export interface IGalleryData {
+  items: HTMLElement[];
+}
+
+export interface IHeaderData {
   basketCount: number;
 }
 
@@ -65,18 +82,19 @@ export interface IBasketData {
   valid: boolean;
 }
 
-export interface IOrderFormData {
-  payment: TPayment | null;
-  address: string;
+export interface IFormData {
   valid: boolean;
   errors: string[];
 }
 
-export interface IContactsFormData {
+export interface IOrderFormData extends IFormData {
+  payment: TPayment | null;
+  address: string;
+}
+
+export interface IContactsFormData extends IFormData {
   email: string;
   phone: string;
-  valid: boolean;
-  errors: string[];
 }
 
 export interface ISuccessData {

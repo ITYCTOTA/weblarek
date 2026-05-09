@@ -1,26 +1,19 @@
 import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { IPageData } from '../../types';
+import { IHeaderData } from '../../types';
 
-export class Page extends Component<IPageData> {
-  private readonly gallery: HTMLElement;
+export class Header extends Component<IHeaderData> {
   private readonly basketButton: HTMLButtonElement;
   private readonly basketCounter: HTMLElement;
 
-  constructor(container: HTMLElement, private readonly events: IEvents) {
+  constructor(container: HTMLElement, private readonly onBasketOpen: () => void) {
     super(container);
 
-    this.gallery = container.querySelector('.gallery') as HTMLElement;
     this.basketButton = container.querySelector('.header__basket') as HTMLButtonElement;
     this.basketCounter = container.querySelector('.header__basket-counter') as HTMLElement;
 
     this.basketButton.addEventListener('click', () => {
-      this.events.emit('basket:open');
+      this.onBasketOpen();
     });
-  }
-
-  set catalog(items: HTMLElement[]) {
-    this.gallery.replaceChildren(...items);
   }
 
   set basketCount(value: number) {

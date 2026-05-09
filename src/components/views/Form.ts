@@ -1,9 +1,5 @@
 import { Component } from '../base/Component';
-
-export interface IFormData {
-  valid: boolean;
-  errors: string[];
-}
+import { IFormData } from '../../types';
 
 export abstract class Form<T extends IFormData> extends Component<T> {
   protected readonly submitButton: HTMLButtonElement;

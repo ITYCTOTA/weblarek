@@ -145,6 +145,21 @@ Presenter - презентер содержит основную логику п
 - `id: string` — идентификатор заказа.
 - `total: number` — подтвержденная сумма заказа.
 
+### Интерфейсы данных представления
+Для типизации метода `render` используются отдельные интерфейсы:
+- `ICardData` — общие данные карточки: `title`, `price`.
+- `IProductCardData` — данные карточки товара с `category` и `image`.
+- `IPreviewCardData` — данные карточки предпросмотра с `description`, `buttonText`, `buttonDisabled`.
+- `IBasketCardData` — данные карточки корзины с номером позиции `index`.
+- `IGalleryData` — массив DOM-элементов карточек каталога.
+- `IHeaderData` — количество товаров в корзине.
+- `IModalData` — содержимое модального окна.
+- `IBasketData` — товары корзины, итоговая сумма и валидность кнопки оформления.
+- `IFormData` — базовые данные формы: `valid`, `errors`.
+- `IOrderFormData` — данные формы оплаты и адреса.
+- `IContactsFormData` — данные формы email и телефона.
+- `ISuccessData` — итоговая сумма успешного заказа.
+
 ## Модели данных
 
 ### Класс Products
@@ -209,31 +224,41 @@ Presenter - презентер содержит основную логику п
 
 ## Слой представления
 
-Классы представления находятся в `src/components/views`. Они отвечают только за отображение и генерацию событий пользовательских действий. Данные приложения хранятся в моделях.
+Классы представления находятся в `src/components/views`. Представления отвечают за DOM, пользовательские действия и вызов переданных обработчиков. Данные приложения в них не хранятся: состояние каталога, корзины, выбранного товара и покупателя находится в моделях.
 
-### Класс Page
-Назначение: отображение главной страницы, каталога и счётчика корзины.  
-Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+Все представления, кроме карточек каталога и карточек корзины, создаются один раз в `main.ts` и затем обновляются через `render`. Карточки каталога и корзины создаются заново при перерисовке соответствующих списков.
+
+### Класс Header
+Назначение: отображение шапки, кнопки корзины и счётчика товаров.  
+Файл: `src/components/views/Header.ts`.  
+Конструктор: `constructor(container: HTMLElement, onBasketOpen: () => void)`.
 
 Поля:
-- `gallery: HTMLElement` — контейнер каталога.
 - `basketButton: HTMLButtonElement` — кнопка открытия корзины.
 - `basketCounter: HTMLElement` — счётчик товаров в корзине.
-- `events: IEvents` — брокер событий.
+- `onBasketOpen: () => void` — обработчик открытия корзины.
 
 Методы и сеттеры:
-- `set catalog(items: HTMLElement[]): void` — отрисовать карточки каталога.
 - `set basketCount(value: number): void` — обновить счётчик корзины.
-- `render(data?: Partial<IPageData>): HTMLElement` — обновить отображение.
+- `render(data?: Partial<IHeaderData>): HTMLElement` — обновить отображение.
+
+### Класс Gallery
+Назначение: отображение списка карточек каталога.  
+Файл: `src/components/views/Gallery.ts`.  
+Конструктор: `constructor(container: HTMLElement)`.
+
+Методы и сеттеры:
+- `set items(items: HTMLElement[]): void` — заменить содержимое галереи карточками товаров.
+- `render(data?: Partial<IGalleryData>): HTMLElement` — обновить отображение.
 
 ### Класс Modal
 Назначение: управление модальным окном.  
-Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+Файл: `src/components/views/Modal.ts`.  
+Конструктор: `constructor(container: HTMLElement)`.
 
 Поля:
 - `closeButton: HTMLButtonElement` — кнопка закрытия.
 - `contentElement: HTMLElement` — контейнер содержимого.
-- `events: IEvents` — брокер событий.
 
 Методы и сеттеры:
 - `set content(value: HTMLElement): void` — заменить содержимое модального окна.
@@ -242,44 +267,87 @@ Presenter - презентер содержит основную логику п
 - `render(data?: Partial<IModalData>): HTMLElement` — обновить отображение.
 
 ### Класс Card
-Назначение: базовый класс карточек товара. Общая логика вынесена в родителя для карточек каталога, предпросмотра и корзины.  
+Назначение: базовая карточка с полями, общими для всех карточек.  
+Файл: `src/components/views/Card.ts`.  
 Конструктор: `constructor(container: HTMLElement)`.
 
 Поля:
-- `titleElement: HTMLElement` — название товара.
-- `priceElement: HTMLElement` — цена товара.
-- `categoryElement?: HTMLElement` — категория товара.
-- `imageElement?: HTMLImageElement` — изображение товара.
+- `titleElement: HTMLElement` — элемент названия товара.
+- `priceElement: HTMLElement` — элемент цены товара.
 
 Методы и сеттеры:
-- `set id(value: string): void` — сохранить id товара в DOM.
 - `set title(value: string): void` — отобразить название.
 - `set price(value: number | null): void` — отобразить цену.
-- `set category(value: string): void` — отобразить категорию и её модификатор.
-- `set image(value: string): void` — отобразить изображение.
+- `render(data?: Partial<ICardData>): HTMLElement` — обновить карточку.
+
+### Класс ProductCard
+Назначение: общий родитель для карточек, у которых есть изображение и категория.  
+Файл: `src/components/views/ProductCard.ts`.  
+Наследуется от `Card`.
+
+Поля:
+- `categoryElement: HTMLElement` — элемент категории.
+- `imageElement: HTMLImageElement` — изображение товара.
+
+Методы и сеттеры:
+- `set title(value: string): void` — отобразить название и записать его в `alt` изображения.
+- `set category(value: string): void` — отобразить категорию и её CSS-модификатор.
+- `set image(value: string): void` — отобразить изображение товара.
 - `render(data?: Partial<IProductCardData>): HTMLElement` — обновить карточку.
 
-### Классы CatalogCard, PreviewCard, BasketCard
-Назначение: специализированные карточки для каталога, модального просмотра и корзины.
+### Класс CatalogCard
+Назначение: карточка товара в каталоге.  
+Файл: `src/components/views/CatalogCard.ts`.  
+Наследуется от `ProductCard`.  
+Конструктор: `constructor(container: HTMLElement, onClick: () => void)`.
 
-Конструкторы:
-- `CatalogCard(container: HTMLElement, events: IEvents)` — карточка каталога.
-- `PreviewCard(container: HTMLElement, events: IEvents)` — карточка подробного просмотра.
-- `BasketCard(container: HTMLElement, events: IEvents)` — карточка товара в корзине.
+Поля:
+- `onClick: () => void` — обработчик выбора карточки.
 
-Особенности:
-- `CatalogCard` генерирует событие выбора карточки.
-- `PreviewCard` отображает описание, состояние кнопки покупки и генерирует событие добавления/удаления.
-- `BasketCard` отображает номер позиции и генерирует событие удаления товара из корзины.
+Особенность: карточка не хранит id товара. Id замыкается в обработчике, который создаётся в презентере.
+
+### Класс PreviewCard
+Назначение: карточка подробного просмотра товара.  
+Файл: `src/components/views/PreviewCard.ts`.  
+Наследуется от `ProductCard`.  
+Конструктор: `constructor(container: HTMLElement, onClick: () => void)`.
+
+Поля:
+- `textElement: HTMLElement` — описание товара.
+- `buttonElement: HTMLButtonElement` — кнопка покупки или удаления.
+- `onClick: () => void` — обработчик нажатия кнопки.
+
+Методы и сеттеры:
+- `set description(value: string): void` — отобразить описание.
+- `set buttonText(value: string): void` — обновить текст кнопки.
+- `set buttonDisabled(value: boolean): void` — включить или отключить кнопку.
+- `render(data?: Partial<IPreviewCardData>): HTMLElement` — обновить карточку.
+
+### Класс BasketCard
+Назначение: карточка товара в корзине.  
+Файл: `src/components/views/BasketCard.ts`.  
+Наследуется от `Card`.  
+Конструктор: `constructor(container: HTMLElement, onDelete: () => void)`.
+
+Поля:
+- `indexElement: HTMLElement` — номер позиции.
+- `deleteButton: HTMLButtonElement` — кнопка удаления.
+- `onDelete: () => void` — обработчик удаления.
+
+Методы и сеттеры:
+- `set index(value: number): void` — отобразить номер позиции.
+- `render(data?: Partial<IBasketCardData>): HTMLElement` — обновить карточку.
 
 ### Класс BasketView
 Назначение: отображение корзины.  
+Файл: `src/components/views/BasketView.ts`.  
 Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
 
 Поля:
 - `listElement: HTMLElement` — список товаров.
 - `priceElement: HTMLElement` — итоговая стоимость.
 - `submitButton: HTMLButtonElement` — кнопка оформления.
+- `events: IEvents` — брокер событий.
 
 Методы и сеттеры:
 - `set items(items: HTMLElement[]): void` — отрисовать товары корзины.
@@ -287,25 +355,60 @@ Presenter - презентер содержит основную логику п
 - `set valid(value: boolean): void` — активировать или деактивировать кнопку оформления.
 - `render(data?: Partial<IBasketData>): HTMLElement` — обновить отображение.
 
-### Классы Form, OrderForm, ContactsForm
-Назначение: отображение форм оформления заказа. `Form` — общий родитель для форм, `OrderForm` отвечает за оплату и адрес, `ContactsForm` — за email и телефон.
+### Класс Form
+Назначение: общий родитель форм оформления заказа.  
+Файл: `src/components/views/Form.ts`.  
+Конструктор: `constructor(container: HTMLFormElement)`.
 
-Конструкторы:
-- `Form(container: HTMLFormElement)` — базовая форма.
-- `OrderForm(container: HTMLFormElement, events: IEvents)` — первый шаг оформления.
-- `ContactsForm(container: HTMLFormElement, events: IEvents)` — второй шаг оформления.
+Поля:
+- `submitButton: HTMLButtonElement` — кнопка отправки формы.
+- `errorsElement: HTMLElement` — контейнер ошибок.
 
 Методы и сеттеры:
 - `set valid(value: boolean): void` — управляет доступностью кнопки отправки.
 - `set errors(value: string[]): void` — отображает ошибки формы.
-- `set payment(value: TPayment | null): void` — выделяет выбранный способ оплаты.
-- `set address(value: string): void` — отображает адрес.
-- `set email(value: string): void` — отображает email.
-- `set phone(value: string): void` — отображает телефон.
+
+### Класс OrderForm
+Назначение: первый шаг оформления заказа: способ оплаты и адрес.  
+Файл: `src/components/views/OrderForm.ts`.  
+Наследуется от `Form`.  
+Конструктор: `constructor(container: HTMLFormElement, events: IEvents)`.
+
+Поля:
+- `addressInput: HTMLInputElement` — поле адреса.
+- `paymentButtons: HTMLButtonElement[]` — кнопки выбора способа оплаты.
+- `events: IEvents` — брокер событий.
+
+Методы и сеттеры:
+- `set address(value: string): void` — отобразить адрес.
+- `set payment(value: TPayment | null): void` — выделить выбранный способ оплаты.
+- `render(data?: Partial<IOrderFormData>): HTMLElement` — обновить форму.
+
+### Класс ContactsForm
+Назначение: второй шаг оформления заказа: email и телефон.  
+Файл: `src/components/views/ContactsForm.ts`.  
+Наследуется от `Form`.  
+Конструктор: `constructor(container: HTMLFormElement, events: IEvents)`.
+
+Поля:
+- `emailInput: HTMLInputElement` — поле email.
+- `phoneInput: HTMLInputElement` — поле телефона.
+- `events: IEvents` — брокер событий.
+
+Методы и сеттеры:
+- `set email(value: string): void` — отобразить email.
+- `set phone(value: string): void` — отобразить телефон.
+- `render(data?: Partial<IContactsFormData>): HTMLElement` — обновить форму.
 
 ### Класс Success
 Назначение: отображение успешного оформления заказа.  
-Конструктор: `constructor(container: HTMLElement, events: IEvents)`.
+Файл: `src/components/views/Success.ts`.  
+Конструктор: `constructor(container: HTMLElement, onClose: () => void)`.
+
+Поля:
+- `descriptionElement: HTMLElement` — описание списанной суммы.
+- `closeButton: HTMLButtonElement` — кнопка закрытия.
+- `onClose: () => void` — обработчик закрытия окна успеха.
 
 Методы и сеттеры:
 - `set total(value: number): void` — отображает списанную сумму.
@@ -319,7 +422,7 @@ Presenter - презентер содержит основную логику п
 - `basket:changed` — изменилось содержимое корзины.
 - `buyer:changed` — изменились данные покупателя.
 
-События представления:
+События пользовательских действий:
 - `card:select` — пользователь выбрал карточку товара в каталоге.
 - `product:toggle` — пользователь нажал кнопку покупки или удаления в карточке предпросмотра.
 - `basket:open` — пользователь открыл корзину.
@@ -331,20 +434,29 @@ Presenter - презентер содержит основную логику п
 - `contacts:email` — пользователь изменил email.
 - `contacts:phone` — пользователь изменил телефон.
 - `contacts:submit` — пользователь нажал кнопку оплаты.
-- `modal:close` — пользователь закрыл модальное окно.
-- `success:close` — пользователь закрыл окно успешного заказа.
 
 ## Презентер
 
-Презентер реализован в `src/main.ts`, так как приложение одностраничное. Он создаёт экземпляры моделей, API-класса и компонентов представления, подписывается на события и связывает слои между собой.
+Презентер реализован в `src/main.ts`, так как приложение одностраничное. Он создаёт модели, API-класс и все постоянные представления, подписывается на события и связывает слои между собой.
+
+Особенности реализации:
+- презентер не хранит локальное состояние модального окна или форм;
+- выбранный товар хранится в модели `Products`;
+- данные корзины хранятся в модели `Basket`;
+- данные покупателя хранятся в модели `Buyer`;
+- формы, модальное окно, корзина, предпросмотр товара, шапка, галерея и окно успеха создаются один раз;
+- карточки каталога и карточки корзины создаются при перерисовке соответствующих списков;
+- представления обновляются при событиях изменения моделей: `products:changed`, `product:previewChanged`, `basket:changed`, `buyer:changed`;
+- модальное окно закрывается прямым вызовом метода `modal.close()`.
 
 Основные обязанности презентера:
 - загрузить каталог товаров через `LarekApi.getProducts()` и сохранить его в `Products`;
-- при изменении каталога отрисовать карточки на главной странице;
+- при изменении каталога отрисовать карточки в `Gallery`;
 - открыть модальное окно товара при выборе карточки;
-- добавить товар в корзину или удалить его из корзины;
-- обновлять счётчик корзины и содержимое корзины при изменении модели;
-- открыть формы оформления заказа и управлять их валидацией;
+- добавить выбранный товар в корзину или удалить его из корзины;
+- обновлять `Header`, `BasketView` и `PreviewCard` при изменении корзины;
+- обновлять `OrderForm` и `ContactsForm` при изменении данных покупателя;
+- открыть формы оформления заказа без повторного создания их экземпляров;
 - собрать `IOrderRequest` из моделей `Buyer` и `Basket`;
 - отправить заказ через `LarekApi.createOrder()`;
 - после успешного заказа очистить корзину и данные покупателя, затем показать окно успеха.
